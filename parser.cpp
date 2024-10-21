@@ -9,10 +9,10 @@
 using namespace std;
 
 enum TokenType {
-    T_INT, T_FLOAT, T_DOUBLE, T_CHAR, T_BOOL, T_STRING, T_ID, T_NUM, T_IF, T_ELSE, T_RETURN, 
-    T_ASSIGN, T_PLUS, T_MINUS, T_MUL, T_DIV, 
+    T_INT, T_FLOAT, T_DOUBLE, T_CHAR, T_BOOL, T_STRING, T_VOID, T_ID, T_NUM, T_IF, T_ELSE, T_WHILE,
+    T_FOR, T_BREAK, T_CONTINUE, T_RETURN, T_ASSIGN, T_PLUS, T_MINUS, T_MUL, T_DIV, 
     T_LPAREN, T_RPAREN, T_LBRACE, T_RBRACE,  
-    T_SEMICOLON, T_GT, T_EOF,
+    T_SEMICOLON, T_GT, T_EOF, T_LG,
 };
 
 struct Token {
@@ -56,8 +56,13 @@ public:
                 else if (word == "char") tokens.push_back(Token{T_CHAR, word, line});
                 else if (word == "bool") tokens.push_back(Token{T_BOOL, word, line});
                 else if (word == "string") tokens.push_back(Token{T_STRING, word, line});
+                else if (word == "void") tokens.push_back(Token{T_VOID, word, line});
                 else if (word == "if") tokens.push_back(Token{T_IF, word, line});
                 else if (word == "else") tokens.push_back(Token{T_ELSE, word, line});
+                else if (word == "while") tokens.push_back(Token{T_WHILE, word, line});
+                else if (word == "for") tokens.push_back(Token{T_FOR, word, line});
+                else if (word == "break") tokens.push_back(Token{T_BREAK, word, line});
+                else if (word == "continue") tokens.push_back(Token{T_CONTINUE, word, line});
                 else if (word == "return") tokens.push_back(Token{T_RETURN, word, line});
                 else tokens.push_back(Token{T_ID, word, line});
                 continue;
@@ -75,6 +80,7 @@ public:
                 case '}': tokens.push_back(Token{T_RBRACE, "}", line}); break;  
                 case ';': tokens.push_back(Token{T_SEMICOLON, ";", line}); break;
                 case '>': tokens.push_back(Token{T_GT, ">", line}); break;
+                case '<': tokens.push_back(Token{T_LG, "<",line});break;
                 default: 
                     cout << "Unexpected character: " << current << " at line " << line << endl; 
                     exit(1);
@@ -119,12 +125,21 @@ private:
     void parseStatement() {
         if (tokens[pos].type == T_INT || tokens[pos].type == T_FLOAT || 
             tokens[pos].type == T_DOUBLE || tokens[pos].type == T_CHAR || 
-            tokens[pos].type == T_BOOL || tokens[pos].type == T_STRING) {
+            tokens[pos].type == T_BOOL || tokens[pos].type == T_STRING || 
+            tokens[pos].type == T_VOID) {
             parseDeclaration();
         } else if (tokens[pos].type == T_ID) {
             parseAssignment();
         } else if (tokens[pos].type == T_IF) {
             parseIfStatement();
+        } else if (tokens[pos].type == T_WHILE) {
+            parseWhileStatement();
+        } else if (tokens[pos].type == T_FOR) {
+            parseForStatement();
+        } else if (tokens[pos].type == T_BREAK) {
+            parseBreakStatement();
+        } else if (tokens[pos].type == T_CONTINUE) {
+            parseContinueStatement();
         } else if (tokens[pos].type == T_RETURN) {
             parseReturnStatement();
         } else if (tokens[pos].type == T_LBRACE) {
@@ -157,6 +172,8 @@ private:
             expect(T_BOOL, "bool");
         } else if (tokens[pos].type == T_STRING) {
             expect(T_STRING, "string");
+        } else if (tokens[pos].type == T_VOID) {
+            expect(T_VOID, "void");
         }
 
         expect(T_ID, "identifier");
@@ -182,6 +199,36 @@ private:
         }
     }
 
+    void parseWhileStatement() {
+        expect(T_WHILE, "while");
+        expect(T_LPAREN, "(");
+        parseExpression();
+        expect(T_RPAREN, ")");
+        parseStatement();
+    }
+
+    void parseForStatement() {
+        expect(T_FOR, "for");
+        expect(T_LPAREN, "(");
+        parseExpression();
+        expect(T_SEMICOLON, ";");
+        parseExpression();
+        expect(T_SEMICOLON, ";");
+        parseExpression();
+        expect(T_RPAREN, ")");
+        parseStatement();
+    }
+
+    void parseBreakStatement() {
+        expect(T_BREAK, "break");
+        expect(T_SEMICOLON, ";");
+    }
+
+    void parseContinueStatement() {
+        expect(T_CONTINUE, "continue");
+        expect(T_SEMICOLON, ";");
+    }
+
     void parseReturnStatement() {
         expect(T_RETURN, "return");
         parseExpression();
@@ -196,7 +243,7 @@ private:
         }
         if (tokens[pos].type == T_GT) {
             pos++;
-            parseExpression();
+            parseTerm();
         }
     }
 
@@ -209,58 +256,45 @@ private:
     }
 
     void parseFactor() {
-        if (tokens[pos].type == T_NUM || tokens[pos].type == T_ID) {
+        if (tokens[pos].type == T_NUM) {
             pos++;
         } else if (tokens[pos].type == T_LPAREN) {
             expect(T_LPAREN, "(");
             parseExpression();
             expect(T_RPAREN, ")");
-        } else {
-            error("unexpected token");
-        }
-    }
-
-    void expect(TokenType type, const string &expectedToken) {
-        if (tokens[pos].type == type) {
+        } else if (tokens[pos].type == T_ID) {
             pos++;
         } else {
-            cout << "Syntax error: expected '" << expectedToken
-                 << "' at line " << tokens[pos].line
-                 << " but found '" << tokens[pos].value << "'" << endl;
+            cout << "Syntax error at line " << tokens[pos].line << endl;
             exit(1);
         }
     }
 
-    void error(const string &message) {
-        cout << "Syntax error: " << message 
-             << " at line " << tokens[pos].line << endl;
-        exit(1);
+    void expect(TokenType expectedType, const string &tokenName) {
+        if (tokens[pos].type != expectedType) {
+            cout << "Expected " << tokenName << " but found '"
+                 << tokens[pos].value << "' at line " << tokens[pos].line << endl;
+            exit(1);
+        }
+        pos++;
     }
 };
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        cout << "Usage: " << argv[0] << " <parser>" << endl;
-        return 1;
-    }
-
-    string filename = argv[1];
-    ifstream file(filename);
-    
+int main() {
+    string filePath = "Parser.txt";
+    ifstream file(filePath);
     if (!file.is_open()) {
-        cout << "Error: could not open file " << filename << endl;
+        cout << "Failed to open file: " << filePath << endl;
         return 1;
     }
 
     stringstream buffer;
     buffer << file.rdbuf();
-    string input = buffer.str();
-    
-    file.close();
+    string src = buffer.str();
 
-    Lexer lexer(input);
+    Lexer lexer(src);
     vector<Token> tokens = lexer.tokenize();
-    
+
     Parser parser(tokens);
     parser.parseProgram();
 

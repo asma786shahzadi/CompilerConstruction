@@ -1,8 +1,18 @@
 int a;
 a=5;
 float c;
-char c;
+char 3;
 double d;
 if (a > 3) 
 {
-    return a; }
+    return a;
+}
+for(int a; a>10; a++)
+{
+    return a;
+}
+while(a>123)
+{
+   a++;
+   return a;
+}
