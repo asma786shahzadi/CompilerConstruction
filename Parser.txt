@@ -1,18 +1,9 @@
 int a;
 a=5;
 float c;
-char 3;
+char c;
 double d;
-if (a > 3) 
+agar (a > 3) 
 {
     return a;
-}
-for(int a; a>10; a++)
-{
-    return a;
-}
-while(a>123)
-{
-   a++;
-   return a;
 }

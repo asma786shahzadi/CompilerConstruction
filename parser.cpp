@@ -57,7 +57,7 @@ public:
                 else if (word == "bool") tokens.push_back(Token{T_BOOL, word, line});
                 else if (word == "string") tokens.push_back(Token{T_STRING, word, line});
                 else if (word == "void") tokens.push_back(Token{T_VOID, word, line});
-                else if (word == "if") tokens.push_back(Token{T_IF, word, line});
+                else if (word == "agar") tokens.push_back(Token{T_IF, word, line});
                 else if (word == "else") tokens.push_back(Token{T_ELSE, word, line});
                 else if (word == "while") tokens.push_back(Token{T_WHILE, word, line});
                 else if (word == "for") tokens.push_back(Token{T_FOR, word, line});
@@ -188,7 +188,7 @@ private:
     }
 
     void parseIfStatement() {
-        expect(T_IF, "if");
+        expect(T_IF, "agar");
         expect(T_LPAREN, "(");
         parseExpression();
         expect(T_RPAREN, ")");
