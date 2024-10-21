@@ -3,6 +3,8 @@
 #include <string>
 #include <cctype>
 #include <map>
+#include <fstream>  // For file handling
+#include <sstream>  // For reading file content
 
 using namespace std;
 
@@ -13,23 +15,15 @@ enum TokenType {
     T_SEMICOLON, T_GT, T_EOF, 
 };
 
-
 struct Token {
     TokenType type;
     string value;
 };
 
 class Lexer {
-
     private:
         string src;
         size_t pos;
-        /*
-        It hold positive values. 
-        In C++, size_t is an unsigned integer data type used to represent the 
-        size of objects in bytes or indices, especially when working with memory-related 
-        functions, arrays, and containers like vector or string. You can also use the int data type but size_t is recommended one
-        */
 
     public:
         Lexer(const string &src) {
@@ -61,25 +55,24 @@ class Lexer {
                 }
                 
                 switch (current) {
-                        case '=': tokens.push_back(Token{T_ASSIGN, "="}); break;
-                        case '+': tokens.push_back(Token{T_PLUS, "+"}); break;
-                        case '-': tokens.push_back(Token{T_MINUS, "-"}); break;
-                        case '*': tokens.push_back(Token{T_MUL, "*"}); break;
-                        case '/': tokens.push_back(Token{T_DIV, "/"}); break;
-                        case '(': tokens.push_back(Token{T_LPAREN, "("}); break;
-                        case ')': tokens.push_back(Token{T_RPAREN, ")"}); break;
-                        case '{': tokens.push_back(Token{T_LBRACE, "{"}); break;  
-                        case '}': tokens.push_back(Token{T_RBRACE, "}"}); break;  
-                        case ';': tokens.push_back(Token{T_SEMICOLON, ";"}); break;
-                        case '>': tokens.push_back(Token{T_GT, ">"}); break;
-                        default: cout << "Unexpected character: " << current << endl; exit(1);
+                    case '=': tokens.push_back(Token{T_ASSIGN, "="}); break;
+                    case '+': tokens.push_back(Token{T_PLUS, "+"}); break;
+                    case '-': tokens.push_back(Token{T_MINUS, "-"}); break;
+                    case '*': tokens.push_back(Token{T_MUL, "*"}); break;
+                    case '/': tokens.push_back(Token{T_DIV, "/"}); break;
+                    case '(': tokens.push_back(Token{T_LPAREN, "("}); break;
+                    case ')': tokens.push_back(Token{T_RPAREN, ")"}); break;
+                    case '{': tokens.push_back(Token{T_LBRACE, "{"}); break;  
+                    case '}': tokens.push_back(Token{T_RBRACE, "}"}); break;  
+                    case ';': tokens.push_back(Token{T_SEMICOLON, ";"}); break;
+                    case '>': tokens.push_back(Token{T_GT, ">"}); break;
+                    default: cout << "Unexpected character: " << current << endl; exit(1);
                 }
                 pos++;
             }
             tokens.push_back(Token{T_EOF, ""});
             return tokens;
         }
-
 
         string consumeNumber() {
             size_t start = pos;
@@ -94,14 +87,11 @@ class Lexer {
         }
 };
 
-
 class Parser {
- 
-
 public:
     Parser(const vector<Token> &tokens) {
-        this->tokens = tokens;  
-        this->pos = 0;          
+        this->tokens = tokens;
+        this->pos = 0;
     }
 
     void parseProgram() {
@@ -124,7 +114,7 @@ private:
             parseIfStatement();
         } else if (tokens[pos].type == T_RETURN) {
             parseReturnStatement();
-        } else if (tokens[pos].type == T_LBRACE) {  
+        } else if (tokens[pos].type == T_LBRACE) {
             parseBlock();
         } else {
             cout << "Syntax error: unexpected token " << tokens[pos].value << endl;
@@ -133,12 +123,13 @@ private:
     }
 
     void parseBlock() {
-        expect(T_LBRACE);  
+        expect(T_LBRACE);
         while (tokens[pos].type != T_RBRACE && tokens[pos].type != T_EOF) {
             parseStatement();
         }
-        expect(T_RBRACE);  
+        expect(T_RBRACE);
     }
+
     void parseDeclaration() {
         expect(T_INT);
         expect(T_ID);
@@ -157,10 +148,10 @@ private:
         expect(T_LPAREN);
         parseExpression();
         expect(T_RPAREN);
-        parseStatement();  
+        parseStatement();
         if (tokens[pos].type == T_ELSE) {
             expect(T_ELSE);
-            parseStatement();  
+            parseStatement();
         }
     }
 
@@ -178,7 +169,7 @@ private:
         }
         if (tokens[pos].type == T_GT) {
             pos++;
-            parseExpression();  // After relational operator, parse the next expression
+            parseExpression();
         }
     }
 
@@ -213,18 +204,25 @@ private:
     }
 };
 
-int main() {
-    string input = R"(
-        int a;
-        a = 5;
-        int b;
-        b = a + 10;
-        if (b > 10) {
-            return b;
-        } else {
-            return 0;
-        }
-    )";
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        cout << "Usage: " << argv[0] << " <parser>" << endl;
+        return 1;
+    }
+
+    string filename = argv[1];
+    ifstream file(filename);
+    
+    if (!file.is_open()) {
+        cout << "Error: could not open file " << filename << endl;
+        return 1;
+    }
+
+    stringstream buffer;
+    buffer << file.rdbuf();
+    string input = buffer.str();
+    
+    file.close();
 
     Lexer lexer(input);
     vector<Token> tokens = lexer.tokenize();
