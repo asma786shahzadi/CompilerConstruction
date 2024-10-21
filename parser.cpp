@@ -9,11 +9,10 @@
 using namespace std;
 
 enum TokenType {
-    T_INT, T_ID, T_NUM, T_IF, T_ELSE, T_RETURN, 
+    T_INT, T_FLOAT, T_DOUBLE, T_CHAR, T_BOOL, T_STRING, T_ID, T_NUM, T_IF, T_ELSE, T_RETURN, 
     T_ASSIGN, T_PLUS, T_MINUS, T_MUL, T_DIV, 
     T_LPAREN, T_RPAREN, T_LBRACE, T_RBRACE,  
-    T_SEMICOLON, T_GT, T_EOF, T_FLOAT, T_CHAR,
-    T_DOUBLE, T_BOOL, T_STRING,
+    T_SEMICOLON, T_GT, T_EOF,
 };
 
 struct Token {
@@ -52,13 +51,13 @@ public:
             if (isalpha(current)) {
                 string word = consumeWord();
                 if (word == "int") tokens.push_back(Token{T_INT, word, line});
+                else if (word == "float") tokens.push_back(Token{T_FLOAT, word, line});
+                else if (word == "double") tokens.push_back(Token{T_DOUBLE, word, line});
+                else if (word == "char") tokens.push_back(Token{T_CHAR, word, line});
+                else if (word == "bool") tokens.push_back(Token{T_BOOL, word, line});
+                else if (word == "string") tokens.push_back(Token{T_STRING, word, line});
                 else if (word == "if") tokens.push_back(Token{T_IF, word, line});
                 else if (word == "else") tokens.push_back(Token{T_ELSE, word, line});
-                else if (word == "char") tokens.push_back(Token{T_CHAR, word, line});
-                else if (word == "float") tokens.push_back(Token{T_FLOAT, word, line});
-                else if (word == "string") tokens.push_back(Token{T_STRING, word, line});
-                else if (word == "double") tokens.push_back(Token{T_DOUBLE, word, line});
-                else if (word == "bool") tokens.push_back(Token{T_BOOL, word, line});
                 else if (word == "return") tokens.push_back(Token{T_RETURN, word, line});
                 else tokens.push_back(Token{T_ID, word, line});
                 continue;
@@ -118,7 +117,9 @@ private:
     size_t pos;
 
     void parseStatement() {
-        if (tokens[pos].type == T_INT) {
+        if (tokens[pos].type == T_INT || tokens[pos].type == T_FLOAT || 
+            tokens[pos].type == T_DOUBLE || tokens[pos].type == T_CHAR || 
+            tokens[pos].type == T_BOOL || tokens[pos].type == T_STRING) {
             parseDeclaration();
         } else if (tokens[pos].type == T_ID) {
             parseAssignment();
@@ -144,7 +145,20 @@ private:
     }
 
     void parseDeclaration() {
-        expect(T_INT, "int");
+        if (tokens[pos].type == T_INT) {
+            expect(T_INT, "int");
+        } else if (tokens[pos].type == T_FLOAT) {
+            expect(T_FLOAT, "float");
+        } else if (tokens[pos].type == T_DOUBLE) {
+            expect(T_DOUBLE, "double");
+        } else if (tokens[pos].type == T_CHAR) {
+            expect(T_CHAR, "char");
+        } else if (tokens[pos].type == T_BOOL) {
+            expect(T_BOOL, "bool");
+        } else if (tokens[pos].type == T_STRING) {
+            expect(T_STRING, "string");
+        }
+
         expect(T_ID, "identifier");
         expect(T_SEMICOLON, ";");
     }
@@ -171,7 +185,7 @@ private:
     void parseReturnStatement() {
         expect(T_RETURN, "return");
         parseExpression();
-        expect(T_SEMICOLON, ";");  // Ensure semicolon is expected after return
+        expect(T_SEMICOLON, ";");
     }
 
     void parseExpression() {

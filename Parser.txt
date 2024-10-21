@@ -1,5 +1,8 @@
 int a;
 a=5;
+float c;
+char c;
+double d;
 if (a > 3) 
 {
     return a; }
