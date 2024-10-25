@@ -3,7 +3,7 @@ a=5;
 float c;
 char c;
 double d;
-agar (a > 3) 
+agar (a == 3) 
 {
     return a;
 }
