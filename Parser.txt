@@ -1,9 +1,17 @@
-int a;
-a=5;
-float c;
-char c;
-double d;
-agar (a == 3) 
+
+z=z+i;
+for(int i;i<10;i=i+1;)
 {
-    return a;
+   int x; 
+// declare variable
+   x=x+i;
+   }
+while(y>0)
+{
+  y=y+1; 
 }
+
+/* asfirthw	eoqjyoerpqeq
+
+lfheorry9023923tey
+sdkgwepiqe */
